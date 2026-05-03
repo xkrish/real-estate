@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bramha — AI Cinematic Walkthroughs</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/framer-motion@10/dist/framer-motion.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <!-- Loading screen while CDN scripts initialize -->
+  <div id="loader" style="
+    position:fixed;inset:0;background:#f4f2ea;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:9999;transition:opacity 0.4s ease;
+    font-family:system-ui,sans-serif;
+  ">
+    <div style="font-size:28px;font-weight:500;letter-spacing:-0.06em;margin-bottom:16px;">bramha</div>
+    <div style="width:40px;height:2px;background:#1738ff;border-radius:2px;animation:loaderBar 1.2s ease-in-out infinite alternate;"></div>
+    <style>@keyframes loaderBar{from{transform:scaleX(0.2)}to{transform:scaleX(1)}}</style>
+  </div>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { motion, AnimatePresence, useScroll, useSpring, useTransform, useInView } = Motion;
+    const { useEffect, useMemo, useState, useRef } = React;
+
+
+const reveal = {
+  hidden: { opacity: 0, y: 36, filter: "blur(8px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.78, ease: [0.16, 1, 0.3, 1] },
+  },
+};
+
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+};
+
+const storyboardFrames = [
+  ["01", "Closed City", "Exterior edge. Morning. The city moves around the site, not through it.", "Cold grey light, 35mm street-level frame, one human silhouette passing the boundary."],
+  ["02", "The Unseen Center", "The towers appear above the city, but the base still feels emotionally distant.", "Wide architectural compression, muted sound bed, no heroic music yet."],
+  ["03", "The Approach", "A normal Frankfurter walks toward the opening. This is not a property tour. It is a discovery.", "Back-follow tracking shot, handheld softness, warm light leaking ahead."],
+  ["04", "Threshold", "The camera enters between architectural forms. The old barrier becomes a path.", "Low-angle push-in, concrete edges, reflective glass, light bloom without fake AI drama."],
+  ["05", "First Reveal", "The plaza opens. This is the campaign's emotional release frame.", "24mm reveal, towers rising, big negative space, human figure lower third."],
+  ["06", "Walkthrough", "The camera glides through the building's public axis, showing how people would actually move.", "Steadicam-like motion, footstep rhythm, lens breathing, real-world scale."],
+  ["07", "Human Use", "Coffee, walking, pausing, meeting. The project starts behaving like a civic place.", "Observational 50mm inserts, natural gestures, warm reflected light."],
+  ["08", "Vertical Awe", "Camera tilts from the plaza to the tower crown, connecting ground life with skyline identity.", "Slow tilt-up, glass texture, controlled reflection, premium architectural pacing."],
+  ["09", "Frankfurt Owns It", "A wide shot where the public realm becomes the hero, not the developer logo.", "Golden hour, layered movement, city rhythm."],
+  ["10", "Final Edit", "The film ends with a clean brand line and a finished cinematic walkthrough delivery.", "Blue-hour frame, warm interiors, calm title card, premium sound design."],
+];
+
+const excuseCards = [
+  {
+    label: "traditional delay",
+    tab: "it needs a full crew",
+    note: "The usual route begins with camera crew, lighting team, location checks, talent, makeup, permissions, and shoot scheduling before the creative idea is even visible.",
+    answer: "Bramha starts with the story system first: storyboard, shot logic, AI visual frames, motion plan, and final edit structure before heavy spend begins.",
+  },
+  {
+    label: "traditional delay",
+    tab: "we need site access first",
+    note: "A physical-first agency waits for location availability, approvals, weather windows, crew blocks, and production logistics.",
+    answer: "Bramha prototypes the complete walkthrough virtually so stakeholders can approve the direction before a site visit or physical shoot is considered.",
+  },
+  {
+    label: "traditional delay",
+    tab: "post will take weeks",
+    note: "Shoot-heavy workflows push the most important decisions into post-production: edit rhythm, shot gaps, missing inserts, and client revisions.",
+    answer: "Bramha designs the edit before production: frames, transitions, motion prompts, sound direction, captions, and campaign cutdowns are mapped in advance.",
+  },
+  {
+    label: "traditional delay",
+    tab: "budget keeps expanding",
+    note: "Every added crew member, gear day, revision loop, permit, travel plan, and location constraint increases cost and slows approval.",
+    answer: "Bramha compresses the campaign into one controlled AI-first pipeline: concept, storyboard, cinematic walkthrough, and final edit delivery at ₹1.5 lakh.",
+  },
+];
+
+const storyboardPages = [
+  {
+    tab: "The Starter",
+    service: "Cinematic Walkthrough Concept",
+    description: "FOUR Frankfurt is presented as a city experience: a once-closed urban fragment becoming open, walkable, and emotionally owned by the public.",
+    deliverables: ["Creative thesis", "Mood board direction", "Human-centered walkthrough arc", "Stakeholder-ready concept copy"],
+    process: ["Project reading", "Narrative angle", "Visual tone", "Approval direction"],
+  },
+  {
+    tab: "Storyboard",
+    service: "Frame-by-Frame Direction",
+    description: "The walkthrough is structured like a film sequence: outside tension, threshold, plaza reveal, public life, vertical awe, and final brand resolve.",
+    deliverables: ["10 storyboard frames", "Camera direction", "Lighting notes", "Edit rhythm"],
+    process: ["Shot blocking", "Motion logic", "Scene transitions", "Final cut map"],
+  },
+  {
+    tab: "AI Film",
+    service: "AI Visual + Motion Pipeline",
+    description: "Each frame becomes a controlled AI production asset with prompt logic, consistency rules, motion prompts, and negative constraints to avoid generic AI output.",
+    deliverables: ["AI image prompts", "Motion prompts", "Style lock", "Quality-control notes"],
+    process: ["Visual generation", "Motion development", "Edit assembly", "Final polish"],
+  },
+];
+
+const deckData = {
+  concept: {
+    title: "Concept Folder",
+    eyebrow: "01 / cinematic walkthrough strategy",
+    slides: [
+      {
+        label: "Pitch Problem",
+        title: "Real estate films keep showing buildings. We show why the place matters.",
+        text: "The pitch is a cinematic walkthrough for FOUR Frankfurt: not a brochure, not a sterile render, but a human journey through the building and public realm. The story moves from closed city edge to threshold, plaza reveal, vertical awe, and final civic belonging.",
+      },
+      {
+        label: "Creative Story",
+        title: "A Frankfurter enters the space for the first time.",
+        text: "The camera follows one ordinary person from the outside edge into the public axis of the project. Every shot is designed like a real walkthrough: approach, entry, reveal, movement through the plaza, tower tilt, public life, and final brand resolve.",
+      },
+      {
+        label: "Mind Map",
+        title: "Closure → Threshold → Walkthrough → Occupation → Belonging",
+        text: "Closure creates tension. Threshold creates curiosity. Walkthrough proves spatial experience. Occupation proves usability. Belonging turns the building into a civic story. That is the full campaign logic: from urban transformation to a cinematic walkthrough that makes the space understandable, memorable, and easy to approve.",
+      },
+      {
+        label: "What We Create",
+        title: "Final edit delivery, not just AI images.",
+        text: "The output is a cinematic walkthrough film package: storyboard, AI image frames, motion prompts, shot transitions, camera movement, sound direction, captions, and final edited hero cut for pitch decks, LinkedIn, Instagram, Shorts, and website hero use.",
+      },
+    ],
+  },
+  storyboard: {
+    title: "Storyboard Folder",
+    eyebrow: "02 / frame-by-frame walkthrough",
+    slides: storyboardFrames.map(([label, title, text, direction]) => ({
+      label: `Frame ${label}`,
+      title,
+      text: `${text} Direction: ${direction}`,
+    })),
+  },
+  output: {
+    title: "Output Folder",
+    eyebrow: "03 / production + delivery",
+    slides: [
+      {
+        label: "Hero Film",
+        title: "30–45 second cinematic walkthrough edit.",
+        text: "A finished scroll-stopping walkthrough cut with camera rhythm, architectural reveal, public-life inserts, premium sound design, title cards, and final brand line.",
+      },
+      {
+        label: "Shorts System",
+        title: "One hero film becomes multiple campaign assets.",
+        text: "15-second reel, 30-second reveal, LinkedIn post cut, silent autoplay web hero, still frames, carousel frames, thumbnails, and client-facing storyboard deck.",
+      },
+      {
+        label: "Cost Logic",
+        title: "Traditional production complexity removed.",
+        text: "No location visit, no model booking, no makeup artist, no camera crew, no gaffer, no drone permits, no physical shoot logistics. Bramha creates the concept, walkthrough, and final edit through a lean one-person AI production system priced at ₹1.5 lakh instead of ₹40–50 lakh shoot-style production budgets.",
+      },
+      {
+        label: "Client Result",
+        title: "A premium campaign prototype they can approve fast.",
+        text: "They receive a polished visual story before committing to heavyweight production. It lets decision-makers see the film, the narrative, and the marketable output almost immediately.",
+      },
+    ],
+  },
+};
+
+function Grain() {
+  return <div className="grain" aria-hidden="true" />;
+}
+
+function AnimatedText({ children, className = "" }) {
+  return (
+    <motion.div className={className} variants={reveal} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.25 }}>
+      {children}
+    </motion.div>
+  );
+}
+
+function TowerSketch() {
+  const sketchRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: sketchRef, offset: ["start 82%", "end 28%"] });
+  const drawMain = useTransform(scrollYProgress, [0.02, 0.62], [0, 1]);
+  const drawEdge = useTransform(scrollYProgress, [0.16, 0.78], [0, 1]);
+  const drawFloors = useTransform(scrollYProgress, [0.34, 0.9], [0, 1]);
+  const suppliesOpacity = useTransform(scrollYProgress, [0.68, 0.92], [0, 1]);
+  const suppliesY = useTransform(scrollYProgress, [0.68, 0.92], [28, 0]);
+
+  return (
+    <svg ref={sketchRef} className="towerSketch" viewBox="0 0 420 780" role="img" aria-label="Outlined abstract sketch of the FOUR Frankfurt tower inspired by the provided reference">
+      <defs>
+        <linearGradient id="lineFade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#1738ff" />
+          <stop offset="58%" stopColor="#151515" />
+          <stop offset="100%" stopColor="#151515" />
+        </linearGradient>
+        <filter id="softGlow">
+          <feGaussianBlur stdDeviation="5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <motion.path
+        className="mainOutline"
+        d="M214 31 C282 55 315 104 310 174 L286 654 C283 716 247 751 197 744 C140 736 105 693 116 629 L145 460 C155 399 154 332 140 270 L114 159 C99 95 145 39 214 31 Z"
+        style={{ pathLength: drawMain, opacity: drawMain }}
+      />
+
+      <motion.path
+        className="towerEdge"
+        d="M244 44 C214 176 215 293 241 405 C268 521 266 644 220 742"
+        style={{ pathLength: drawEdge, opacity: drawEdge }}
+      />
+      <motion.path
+        className="towerEdge faint"
+        d="M164 67 C188 177 181 287 158 393 C135 503 132 628 178 737"
+        style={{ pathLength: drawEdge, opacity: drawEdge }}
+      />
+
+      {Array.from({ length: 20 }).map((_, i) => {
+        const y = 78 + i * 31;
+        const left = 132 + Math.sin(i * 0.44) * 12;
+        const right = 297 + Math.cos(i * 0.37) * 12;
+        return (
+          <motion.line
+            key={i}
+            className="floorLine"
+            x1={left}
+            y1={y}
+            x2={right}
+            y2={y + Math.sin(i) * 4}
+            style={{ pathLength: drawFloors, opacity: drawFloors }}
+          />
+        );
+      })}
+
+      {[
+        [70, 540, "camera"],
+        [332, 500, "lights"],
+        [59, 258, "models"],
+        [335, 252, "crew"],
+        [92, 673, "permits"],
+      ].map(([x, y, text], i) => (
+        <motion.g
+          key={text}
+          className="stuckSupply"
+          style={{ opacity: suppliesOpacity, y: suppliesY }}
+        >
+          <rect x={x - 38} y={y - 18} width="76" height="36" rx="18" />
+          <text x={x} y={y + 5} textAnchor="middle">{text}</text>
+          <path d={`M${x} ${y + 20} C${x + (x < 210 ? 52 : -52)} ${y + 35}, ${210} ${y + 20}, 210 ${y + 6}`} />
+        </motion.g>
+      ))}
+
+      <motion.circle
+        className="blueNode"
+        cx="214"
+        cy="31"
+        r="9"
+        style={{ opacity: drawMain }}
+      />
+    </svg>
+  );
+}
+
+function ProductionIllustration() {
+  return (
+    <svg className="productionSvg" viewBox="0 0 1200 610" role="img" aria-label="Illustration comparing traditional production with Bramha AI film route">
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L9,3 z" fill="#1738ff" />
+        </marker>
+      </defs>
+
+      <motion.rect className="locationBox" x="64" y="58" width="500" height="470" rx="30" initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} />
+      <motion.rect className="locationBox ai" x="690" y="58" width="430" height="470" rx="30" initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.14, duration: 0.7 }} />
+
+      <text className="svgTitle" x="92" y="110">traditional shoot route</text>
+      <text className="svgTitle" x="720" y="110">bramha AI film route</text>
+
+      <motion.g className="cameraRig" initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>
+        <text x="110" y="214">camera man</text>
+        <rect x="110" y="238" width="118" height="68" rx="10" />
+        <circle cx="242" cy="272" r="32" />
+        <path d="M154 306 L118 385 M184 306 L224 385 M170 306 L170 388" />
+      </motion.g>
+
+      <motion.g className="lightRig" initial={{ opacity: 0, scale: 0.84 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.35 }}>
+        <text x="356" y="184">gaffer + lights</text>
+        <circle cx="420" cy="252" r="54" />
+        <path d="M420 306 L420 390 M376 390 L464 390 M420 306 L376 348 M420 306 L464 348" />
+      </motion.g>
+
+      <motion.g className="personCrew" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.48 }}>
+        <circle cx="304" cy="304" r="24" />
+        <path d="M304 328 L304 394 M262 356 L346 356 M304 394 L278 444 M304 394 L334 444" />
+        <text x="248" y="468">model / makeup / crew</text>
+      </motion.g>
+
+      <foreignObject x="92" y="486" width="430" height="42">
+        <div className="svgPrice traditionalPrice"><CounterNumber value={40} prefix="₹" suffix="–50 lakh production-style stack" /></div>
+      </foreignObject>
+
+      <motion.g className="bramhaCore" initial={{ opacity: 0, scale: 0.7 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.5, type: "spring" }}>
+        <circle cx="904" cy="270" r="82" />
+        <text x="904" y="260" textAnchor="middle">one man</text>
+        <text x="904" y="290" textAnchor="middle">AI studio</text>
+      </motion.g>
+      <motion.path className="blueFlow" d="M760 414 C846 348 966 348 1050 414" markerEnd="url(#arrow)" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ delay: 0.85, duration: 1.15 }} />
+
+      <foreignObject x="744" y="486" width="350" height="42">
+        <div className="svgPrice bramhaPrice"><CounterNumber value={1.5} prefix="₹" suffix=" lakh cinematic walkthrough package" /></div>
+      </foreignObject>
+    </svg>
+  );
+}
+
+function Folder({ id, title, meta, onOpen }) {
+  return (
+    <motion.button
+      className="folder"
+      onDoubleClick={() => onOpen(id)}
+      onClick={() => onOpen(id)}
+      whileHover={{ y: -8, rotate: -0.7, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 220, damping: 18 }}
+    >
+      <span className="folderHint">double tap to open</span>
+      <span className="folderTab" />
+      <span className="folderBody">
+        <span>{title}</span>
+        <small>{meta}</small>
+      </span>
+    </motion.button>
+  );
+}
+
+function ExcuseFolder({ card, index }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <motion.article
+      className={`excuseFolder ${open ? "open" : ""}`}
+      variants={reveal}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onClick={() => setOpen((v) => !v)}
+      whileHover={{ y: -10 }}
+    >
+      <div className="paperTab">{card.label}</div>
+      <div className="folderFace">
+        <span>0{index + 1}</span>
+        <h3>{card.tab}</h3>
+      </div>
+      <AnimatePresence>
+        {open && (
+          <motion.div className="notePage" initial={{ y: 50, opacity: 0 }} animate={{ y: -18, opacity: 1 }} exit={{ y: 30, opacity: 0 }} transition={{ type: "spring", stiffness: 220, damping: 22 }}>
+            <p className="typeLine"><b>Why it slows down:</b> {card.note}</p>
+            <p className="typeLine answer"><b>Bramha instead:</b> {card.answer}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.article>
+  );
+}
+
+function FlipBook() {
+  const [page, setPage] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const current = storyboardPages[page];
+
+  const goToPage = (index) => {
+    setDirection(index > page ? 1 : -1);
+    setPage(index);
+  };
+
+  return (
+    <div className="flipWrap">
+      <div className="bookSpine" />
+      <div className="pageTabs">
+        {storyboardPages.map((p, i) => (
+          <button key={p.tab} className={i === page ? "active" : ""} onClick={() => goToPage(i)}>{p.tab}</button>
+        ))}
+      </div>
+      <AnimatePresence mode="wait" custom={direction}>
+        <motion.article
+          key={page}
+          custom={direction}
+          className={`flipPage pageTone${page}`}
+          initial={{ rotateY: direction > 0 ? -74 : 74, opacity: 0.25, x: direction > 0 ? 46 : -46, filter: "blur(6px)" }}
+          animate={{ rotateY: 0, opacity: 1, x: 0, filter: "blur(0px)" }}
+          exit={{ rotateY: direction > 0 ? 74 : -74, opacity: 0.15, x: direction > 0 ? -46 : 46, filter: "blur(6px)" }}
+          transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <motion.div className="pageCurl" initial={{ opacity: 0.7, x: direction > 0 ? -60 : 60 }} animate={{ opacity: 0, x: 0 }} transition={{ duration: 0.72 }} />
+          <div className="pageGrid top"><span>SERVICE:</span><h3>{current.service}</h3></div>
+          <div className="pageGrid desc"><span>DESCRIPTION:</span><p>{current.description}</p></div>
+          <div className="pageGrid"><span>DELIVERABLES:</span><ul>{current.deliverables.map((x) => <li key={x}>{x}</li>)}</ul></div>
+          <div className="pageGrid"><span>THE PROCESS:</span><ul>{current.process.map((x) => <li key={x}>{x}</li>)}</ul></div>
+          <div className="pageFoot"><span>REVISION LOGIC: direction-first</span><span>DURATION: fast approval loop</span></div>
+        </motion.article>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function LiquidBudget() {
+  const items = [["crew + camera", 18], ["lighting + grip", 9], ["talent + styling", 7], ["permits + logistics", 6], ["post + revisions", 10]];
+  return (
+    <div className="liquidBudget">
+      <div className="budgetSide traditionalSide">
+        <h3>Traditional agency breakdown</h3>
+        <p>Costs spread across crew, location, logistics, talent, gear, and post-production before the core film direction is fully proven.</p>
+        <div className="blackBubbles">
+          {items.map(([label, value], i) => (
+            <motion.div key={label} className="blackBubble" initial={{ scale: 0.4, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.08, type: "spring" }}>
+              <strong><CounterNumber value={value} prefix="₹" suffix="L" /></strong>
+              <span>{label}</span>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+      <div className="budgetSide bramhaSide">
+        <h3>Bramha breakdown</h3>
+        <p>One controlled AI-first production system focused on concept clarity, storyboard approval, visual direction, motion design, and final edit delivery.</p>
+        <motion.div className="liquidCore" initial={{ scale: 0.75, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.9, type: "spring" }}>
+          <strong><CounterNumber value={1.5} prefix="₹" suffix="L" /></strong>
+          <span>complete walkthrough package</span>
+        </motion.div>
+        <div className="miniLiquidRow">
+          {['concept', 'storyboard', 'motion', 'final edit'].map((x, i) => (
+            <motion.i key={x} initial={{ y: 18, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 + i * 0.08 }}>{x}</motion.i>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DeckModal({ deck, onClose }) {
+  const [slide, setSlide] = useState(0);
+  const current = deck?.slides?.[slide];
+
+  useEffect(() => setSlide(0), [deck]);
+
+  useEffect(() => {
+    if (!deck) return;
+    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.body.style.overflow = '';
+    };
+  }, [deck, onClose]);
+
+  if (!deck) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div className="modalShell" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        <motion.div className="deck" initial={{ y: 60, scale: 0.96 }} animate={{ y: 0, scale: 1 }} exit={{ y: 50, scale: 0.96 }}>
+          <div className="deckTop">
+            <div>
+              <p>{deck.eyebrow}</p>
+              <h3>{deck.title}</h3>
+            </div>
+            <button onClick={onClose}>close</button>
+          </div>
+          <AnimatePresence mode="wait">
+            <motion.div key={slide} className="deckSlide" initial={{ opacity: 0, x: 35 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -35 }} transition={{ duration: 0.35 }}>
+              <span>{current.label}</span>
+              <h2>{current.title}</h2>
+              <p>{current.text}</p>
+            </motion.div>
+          </AnimatePresence>
+          <div className="deckControls">
+            <button onClick={() => setSlide((s) => Math.max(0, s - 1))}>prev</button>
+            <div className="dots">
+              {deck.slides.map((_, i) => (
+                <button key={i} className={i === slide ? "active" : ""} onClick={() => setSlide(i)} aria-label={`Open slide ${i + 1}`} />
+              ))}
+            </div>
+            <button onClick={() => setSlide((s) => Math.min(deck.slides.length - 1, s + 1))}>next</button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function CounterNumber({ value, prefix = "", suffix = "" }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, amount: 0.45 });
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    let frame;
+    let start;
+    const duration = 1350;
+    const animate = (time) => {
+      if (!start) start = time;
+      const progress = Math.min((time - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(value * eased);
+      if (progress < 1) frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [value, inView]);
+
+  const formatted = value % 1 === 0 ? Math.round(display) : display.toFixed(1);
+  return <span ref={ref}>{prefix}{formatted}{suffix}</span>;
+}
+
+
+function StoryCard({ frame, i }) {
+  return (
+    <motion.article className="storyCard" variants={reveal} whileHover={{ y: -8 }}>
+      <div className="storyVisual">
+        <span>{frame[0]}</span>
+        <motion.i initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05, duration: 0.9 }} />
+      </div>
+      <h3>{frame[1]}</h3>
+      <p>{frame[2]}</p>
+      <small>{frame[3]}</small>
+    </motion.article>
+  );
+}
+
+function App() {
+  const [activeDeck, setActiveDeck] = useState(null);
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: 0.001 });
+  const heroY = useTransform(scrollYProgress, [0, 0.16], [0, -120]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.16], [1, 0.94]);
+
+  const active = useMemo(() => (activeDeck ? deckData[activeDeck] : null), [activeDeck]);
+
+  useEffect(() => {
+    const loader = document.getElementById('loader');
+    if (loader) {
+      loader.style.opacity = '0';
+      setTimeout(() => { loader.style.display = 'none'; }, 400);
+    }
+  }, []);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const navRef = useRef(null);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const handleOutside = (e) => {
+      if (navRef.current && !navRef.current.contains(e.target)) {
+        setMobileNavOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('touchstart', handleOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('touchstart', handleOutside);
+    };
+  }, [mobileNavOpen]);
+
+  return (
+    <main>
+      <Grain />
+      <motion.div className="scrollMeter" style={{ scaleX: progress }} />
+
+      <header className="topbar">
+        <a className="brand" href="#hero" aria-label="bramha studio home">
+          <span>bramha</span>
+          <small>AI FILM STUDIO</small>
+        </a>
+        <nav>
+          <a href="#concept">concept</a>
+          <a href="#storyboard">storyboard</a>
+          <a href="#production">cost map</a>
+          <a href="#contact">let's chat</a>
+        </nav>
+        <button className="hamburger" onClick={() => setMobileNavOpen(v => !v)} aria-label="toggle menu">
+          <span className={mobileNavOpen ? "bar open" : "bar"} />
+          <span className={mobileNavOpen ? "bar open" : "bar"} />
+          <span className={mobileNavOpen ? "bar open" : "bar"} />
+        </button>
+      </header>
+
+      {mobileNavOpen && (
+        <motion.div
+          ref={navRef}
+          className="mobileNav"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.28 }}
+        >
+          <a href="#concept" onClick={() => setMobileNavOpen(false)}>concept</a>
+          <a href="#storyboard" onClick={() => setMobileNavOpen(false)}>storyboard</a>
+          <a href="#production" onClick={() => setMobileNavOpen(false)}>cost map</a>
+          <a href="#contact" onClick={() => setMobileNavOpen(false)}>let's chat</a>
+        </motion.div>
+      )}
+
+      <section id="hero" className="hero section">
+        <motion.div className="heroCopy" style={{ y: heroY, scale: heroScale }}>
+          <p className="micro">bramha.studio / cinematic real estate walkthroughs</p>
+          <h1>
+            your building deserves <span>better walkthroughs</span>
+          </h1>
+          <p className="heroLine">And this is where FOUR Frankfurt stops being a static tower presentation and becomes a cinematic human journey through space.</p>
+          <a className="cta" href="#storyboard">view storyboard <span>▶</span></a>
+        </motion.div>
+        <motion.div className="heroMark" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.45, duration: 0.8 }}>
+          <span className="blueDot" />
+          <span className="selectBox">better walkthroughs</span>
+        </motion.div>
+      </section>
+
+      <motion.section id="concept" className="section gridIntro" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.18 }}>
+        <div className="gridLines" />
+        <motion.p className="sideLabel" variants={reveal}>goals</motion.p>
+        <motion.div className="introBlock" variants={reveal}>
+          <span className="underlined">read more</span>
+          <h2>We pitched a cinematic walkthrough, not another lifeless CGI parade.</h2>
+          <p>This page explains the complete offer: cinematic story development, frame-by-frame storyboard, AI visual direction, motion prompting, editing structure, and final walkthrough delivery for FOUR Frankfurt.</p>
+        </motion.div>
+        <motion.div className="note one" variants={reveal}>
+          <span>make stuff</span>
+          <p>approach → threshold → plaza → vertical reveal → public life → final edit.</p>
+        </motion.div>
+        <motion.div className="note two" variants={reveal}>
+          <span>output</span>
+          <p>30–45s film, cutdowns, stills, storyboard deck, prompts, edit map.</p>
+        </motion.div>
+        <motion.div className="folderFloating" variants={reveal}>
+          <Folder id="concept" title="concept" meta="story / mind map / offer" onOpen={setActiveDeck} />
+        </motion.div>
+      </motion.section>
+
+      <section className="section walkthroughMap">
+        <AnimatedText className="walkHeader">
+          <p className="micro blue">01 / cinematic walkthrough anatomy</p>
+          <h2>The walkthrough is built like a film sequence.</h2>
+          <p>Every camera move has a purpose. The film is designed around how a viewer emotionally enters the building: from the city edge, through the threshold, into the plaza, upward to the towers, and finally into the public rhythm of the place.</p>
+        </AnimatedText>
+        <motion.div className="walkSteps" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }}>
+          {["outside tension", "entry path", "first reveal", "human scale", "tower awe", "public rhythm", "final brand line"].map((step, i) => (
+            <motion.div key={step} className="walkStep" variants={reveal}>
+              <span>{String(i + 1).padStart(2, "0")}</span>
+              <p>{step}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
+      <section className="section posterSection">
+        <motion.div className="posterImage" initial={{ opacity: 0, y: 60 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.9 }}>
+          <TowerSketch />
+        </motion.div>
+        <AnimatedText className="posterText">
+          <p className="micro blue">02 / scroll-built tower sketch</p>
+          <h2>The tower grows. The old production baggage gets stuck.</h2>
+          <p>Traditional production depends on crews, lights, models, makeup, permits, travel, and location logistics. Bramha replaces that complexity with a focused AI film pipeline: concept, storyboard frames, motion direction, edit structure, and final delivery.</p>
+        </AnimatedText>
+      </section>
+
+      <section id="storyboard" className="section storyboardSection">
+        <AnimatedText className="storyHeader">
+          <p className="micro blue">03 / creative storyboard</p>
+          <h2>The complete walkthrough concept, mapped like a pitch document.</h2>
+          <p>The storyboard is not a loose creative idea. It is a structured path from city edge to public arrival, designed so the prospect can understand the final film before production begins.</p>
+        </AnimatedText>
+        <motion.div className="storyLayout" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.18 }}>
+          <motion.div variants={reveal}><FlipBook /></motion.div>
+          <motion.div className="storyGrid compact" variants={stagger}>
+            {storyboardFrames.slice(0, 6).map((frame, i) => <StoryCard frame={frame} i={i} key={frame[0]} />)}
+          </motion.div>
+        </motion.div>
+      </section>
+
+      <section id="roadmap" className="section binder pitchBinder">
+        <motion.div className="binderRing left" initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }} />
+        <motion.div className="binderRing right" initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }} />
+        <AnimatedText className="binderHeader">
+          <p>04 — Why It Works.</p>
+          <h2><span>Public Space</span><br />becomes the story.</h2>
+        </AnimatedText>
+        <motion.div className="binderBody pitchBody" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.25 }}>
+          <motion.div className="binderCopy" variants={reveal}>
+            <p>FOUR Frankfurt is already about access, public squares, new passages, mixed use, and a city center opening itself again. The walkthrough uses that real project logic as the emotional spine.</p>
+            <p>The viewer does not just see towers. They follow movement: outside edge, threshold, plaza reveal, vertical awe, and public rhythm.</p>
+          </motion.div>
+          <motion.div className="pitchCards" variants={stagger}>
+            {["access", "arrival", "public life", "city identity"].map((x, i) => <motion.div key={x} variants={reveal}><span>0{i + 1}</span>{x}</motion.div>)}
+          </motion.div>
+        </motion.div>
+      </section>
+
+      <section className="section comparisonBoard">
+        <AnimatedText className="compareHeader">
+          <p className="micro blue">05 / workflow comparison</p>
+          <h2>Bramha vs traditional production workflow</h2>
+          <p>Traditional production begins with logistics and only later reveals whether the story works. Bramha begins with the story system, then builds the walkthrough, motion, and final edit around it.</p>
+        </AnimatedText>
+        <motion.div className="compareColumns" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.22 }}>
+          <motion.div className="compareCol traditional" variants={reveal}>
+            <span className="colTag">traditional route</span>
+            <h3>Workflow drag</h3>
+            <ul><li>crew-first planning</li><li>location and permit dependency</li><li>shoot before final story confidence</li><li>post-production solves missing clarity</li></ul>
+          </motion.div>
+          <motion.div className="compareRail" variants={reveal}>{['strategy', 'production', 'approval', 'delivery'].map((x, i) => <div key={x}><span>{String(i + 1).padStart(2, '0')}</span><p>{x}</p></div>)}</motion.div>
+          <motion.div className="compareCol bramha" variants={reveal}>
+            <span className="colTag">bramha route</span>
+            <h3>Story-first system</h3>
+            <ul><li>creative thesis before spend</li><li>storyboard and motion map first</li><li>AI visuals prove the walkthrough</li><li>final edit delivered as campaign assets</li></ul>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      <section className="section excuseSection">
+        <AnimatedText className="excuseHeader">
+          <p className="micro blue">06 / what slows the old way down</p>
+          <h2>Every production excuse becomes a Bramha shortcut.</h2>
+          <p>Hover over each folder. The note page slides up and explains the traditional bottleneck, then shows how our AI-first walkthrough system removes it.</p>
+        </AnimatedText>
+        <motion.div className="excuseGrid" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.18 }}>
+          {excuseCards.map((card, i) => <ExcuseFolder key={card.tab} card={card} index={i} />)}
+        </motion.div>
+      </section>
+
+      <section id="production" className="section productionSection">
+        <AnimatedText className="productionCopy">
+          <p className="micro blue">07 / production system</p>
+          <h2>Two ways to build the same walkthrough. One is heavy. One is controlled.</h2>
+          <p>The traditional route stacks people, equipment, logistics, shoot days, and post-production before the concept is fully proven. Bramha starts with the film logic first: story, storyboard, AI frames, motion, and final edit delivery.</p>
+        </AnimatedText>
+        <div className="productionFrame"><ProductionIllustration /></div>
+      </section>
+
+      <section className="section budgetSection">
+        <AnimatedText className="budgetHeader">
+          <p className="micro blue">08 / cost breakdown</p>
+          <h2>Same campaign intent. Very different cost architecture.</h2>
+          <p>The black bubbles show how traditional production spreads budget across logistics. The liquid Bramha core shows how the offer is compressed into one focused creative pipeline.</p>
+        </AnimatedText>
+        <LiquidBudget />
+      </section>
+
+      <section id="folders" className="section foldersPanel dossierPanel">
+        <motion.div className="dossierIntro" initial={{ opacity: 0, y: 34 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <p className="micro blue">09 / interactive dossier</p>
+          <h2>Open the folders behind the film.</h2>
+          <p>Each folder reveals a part of the walkthrough system: the concept, the storyboard, and the final delivery package. Click a folder to open the deck.</p>
+          <svg className="scribbleMark" viewBox="0 0 420 160" aria-hidden="true">
+            <motion.path d="M18 112 C70 34 150 40 183 84 C208 118 171 145 132 121 C86 92 142 23 243 39 C314 50 362 83 400 38" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.6, ease: 'easeInOut' }} />
+            <motion.text x="46" y="42" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1 }}>why</motion.text>
+            <motion.text x="208" y="28" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.15 }}>how</motion.text>
+            <motion.text x="330" y="118" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.3 }}>what</motion.text>
+          </svg>
+        </motion.div>
+        <motion.div className="dossierFolders" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.24 }}>
+          <motion.div variants={reveal}><Folder id="concept" title="01 Concept" meta="story / mind map / offer" onOpen={setActiveDeck} /></motion.div>
+          <motion.div variants={reveal}><Folder id="storyboard" title="02 Storyboard" meta="10 frames / camera / motion" onOpen={setActiveDeck} /></motion.div>
+          <motion.div variants={reveal}><Folder id="output" title="03 Output" meta="film / cutdowns / delivery" onOpen={setActiveDeck} /></motion.div>
+        </motion.div>
+        <motion.div className="stickyNotes" initial={{ opacity: 0, scale: 0.92 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
+          {['public space = story', 'walkthrough before shoot', 'final edit, not assets'].map((x, i) => <span key={x} className={`note${i}`}>{x}</span>)}
+        </motion.div>
+      </section>
+
+      <section id="output" className="section outputMap">
+        <AnimatedText className="outputLeft">
+          <h2>What they actually get</h2>
+          <p>A one-page campaign system that turns the concept into a client-facing pitch, production roadmap, final walkthrough edit, and social content engine.</p>
+        </AnimatedText>
+        <motion.div className="outputCards" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }}>
+          {[
+            ["01", "Mood Board", "Visual pillars, palette, material mood, lighting language."],
+            ["02", "Storyboard", "10-frame cinematic walkthrough sequence with shot intent and camera notes."],
+            ["03", "AI Prompt Kit", "Image prompts, motion prompts, consistency rules, negative prompts."],
+            ["04", "Final Edit", "30–45s hero film, 15s reel, 30s reveal, LinkedIn cut, stills, thumbnails."],
+          ].map(([num, title, text]) => (
+            <motion.article key={num} variants={reveal} whileHover={{ x: 8 }}>
+              <span>{num}</span>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </motion.article>
+          ))}
+        </motion.div>
+      </section>
+
+      <section id="contact" className="section final">
+        <AnimatedText>
+          <p className="micro">bramha / AI cinematic walkthrough system</p>
+          <h2>FOUR Frankfurt deserves a walkthrough that helps people feel the experience of the place before they ever arrive.</h2>
+          <a className="cta" href="https://calendly.com/bramha" target="_blank" rel="noopener noreferrer">let's chat <span>▶</span></a>
+        </AnimatedText>
+      </section>
+
+      <DeckModal deck={active} onClose={() => setActiveDeck(null)} />
+    </main>
+  );
+}
+
+
+
+const styles = document.createElement("style");
+styles.innerHTML = `
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap');
+
+:root {
+  --paper: #f4f2ea;
+  --paper-soft: #faf8f2;
+  --ink: #1f1c1a;
+  --muted: #77736c;
+  --line: rgba(31, 28, 26, 0.14);
+  --blue: #1738ff;
+  --blue-soft: rgba(23, 56, 255, 0.12);
+  --green-soft: rgba(177, 210, 136, 0.45);
+  --green: #5f930f;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Inter, system-ui, sans-serif;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; }
+main { position: relative; }
+
+.grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  opacity: 0.18;
+  background-image: radial-gradient(rgba(0,0,0,0.16) 0.7px, transparent 0.7px);
+  background-size: 4px 4px;
+  mix-blend-mode: multiply;
+}
+.scrollMeter {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 4px;
+  background: var(--blue);
+  transform-origin: left;
+  z-index: 400;
+}
+
+.topbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 88px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 32px clamp(22px, 5vw, 72px);
+  z-index: 100;
+  pointer-events: none;
+}
+.topbar * { pointer-events: auto; }
+.brand { display: grid; line-height: 0.86; letter-spacing: -0.06em; }
+.brand span { font-size: clamp(28px, 4vw, 48px); font-weight: 500; }
+.brand small { letter-spacing: 0.28em; font-size: 10px; margin-left: 5px; }
+nav { display: flex; gap: 24px; font-size: 13px; letter-spacing: -0.02em; }
+nav a { border-bottom: 1px solid transparent; }
+nav a:hover { border-color: var(--blue); color: var(--blue); }
+
+.section {
+  min-height: 100vh;
+  padding: clamp(100px, 12vw, 150px) clamp(22px, 5vw, 72px);
+  position: relative;
+}
+.micro { font-size: 14px; letter-spacing: -0.025em; color: var(--muted); }
+.micro.blue { color: var(--blue); }
+h1, h2, h3, p { margin: 0; }
+h1 {
+  font-size: clamp(58px, 9.2vw, 138px);
+  line-height: 0.91;
+  letter-spacing: -0.075em;
+  max-width: 1180px;
+  font-weight: 800;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+h1 span {
+  display: inline-block;
+  font-family: Instrument Serif, serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 0.96;
+  background: var(--blue-soft);
+  border: 2px solid var(--blue);
+  padding: 0 0.12em 0.04em;
+  color: #30243d;
+}
+.hero {
+  display: flex;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+.heroCopy { max-width: 1080px; margin-top: 4vh; transform-origin: left center; }
+.heroLine {
+  max-width: 790px;
+  font-size: clamp(22px, 2.7vw, 38px);
+  letter-spacing: -0.035em;
+  line-height: 1.14;
+  margin: 44px 0 36px;
+}
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 40px;
+  background: #161616;
+  color: #fff;
+  border-radius: 10px;
+  padding: 22px 32px;
+  font-size: 24px;
+  letter-spacing: -0.055em;
+}
+.cta:hover { background: var(--blue); }
+.heroMark { position: absolute; left: 4vw; top: 48%; pointer-events: none; }
+.blueDot { width: 70px; height: 70px; background: var(--blue); border-radius: 50%; position: absolute; transform: translate(-45%, -45%); }
+.selectBox { display: block; width: min(70vw, 870px); height: 110px; border: 3px solid var(--blue); background: var(--blue-soft); color: transparent; }
+
+.gridIntro {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(5, minmax(110px, 1fr));
+  overflow: hidden;
+}
+.gridLines {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 14.285vw 20vh;
+}
+.sideLabel { grid-column: 2; grid-row: 1; font-size: 34px; letter-spacing: -0.075em; align-self: end; z-index: 1; }
+.introBlock { grid-column: 1 / 5; grid-row: 3 / 5; z-index: 1; align-self: center; }
+.underlined, .note span { border-bottom: 2px solid var(--blue); display: inline-block; margin-bottom: 20px; font-size: 24px; letter-spacing: -0.055em; }
+.introBlock h2, .walkHeader h2, .posterText h2, .storyHeader h2, .compareHeader h2, .excuseHeader h2, .productionCopy h2, .budgetHeader h2, .outputLeft h2, .final h2 {
+  font-size: clamp(44px, 6.4vw, 90px);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+  font-weight: 700;
+  text-wrap: balance; overflow-wrap: break-word;
+}
+.introBlock p, .walkHeader p:last-child, .posterText p, .storyHeader p, .compareHeader p:last-child, .excuseHeader p:last-child, .productionCopy p, .budgetHeader p:last-child, .binderCopy p, .outputLeft p {
+  font-size: clamp(18px, 2vw, 28px);
+  line-height: 1.18;
+  letter-spacing: -0.025em;
+  color: var(--muted);
+  margin-top: 28px;
+  max-width: 840px;
+}
+.note { z-index: 1; font-size: 16px; letter-spacing: -0.025em; color: var(--muted); }
+.note.one { grid-column: 4 / 6; grid-row: 2; align-self: end; }
+.note.two { grid-column: 6 / 8; grid-row: 2; align-self: center; }
+.folderFloating { grid-column: 4 / 6; grid-row: 3 / 5; z-index: 2; justify-self: center; align-self: center; }
+
+.walkthroughMap { background: #f8f8f4; }
+.walkHeader { max-width: 1000px; }
+.walkSteps { margin-top: 80px; display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.walkStep { min-height: 280px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 24px; display: flex; flex-direction: column; justify-content: space-between; }
+.walkStep span { color: var(--blue); font-size: 13px; }
+.walkStep p { font-size: clamp(24px, 2.45vw, 38px); line-height: 1; letter-spacing: -0.045em; }
+
+.posterSection { display: grid; grid-template-columns: 0.95fr 1.05fr; gap: clamp(32px, 6vw, 96px); align-items: center; background: #fffdf7; }
+.posterImage { min-height: 76vh; border-radius: 26px; background: linear-gradient(180deg, #dfe9f2, #fffdf7 62%); border: 1px solid var(--line); display: grid; place-items: center; overflow: hidden; }
+.towerSketch { width: min(88%, 520px); height: auto; overflow: visible; }
+.mainOutline, .towerEdge { fill: none; stroke: url(#lineFade); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.towerEdge { stroke-width: 1.8; }
+.towerEdge.faint { opacity: 0.55; }
+.floorLine { stroke: rgba(34, 29, 27, 0.28); stroke-width: 1; }
+.blueNode { fill: var(--blue); filter: drop-shadow(0 0 18px rgba(23,56,255,0.5)); }
+.stuckSupply rect { fill: #fff; stroke: var(--blue); stroke-width: 1.4; }
+.stuckSupply text { font-size: 12px; fill: var(--blue); font-weight: 700; letter-spacing: -0.025em; }
+.stuckSupply path { fill: none; stroke: rgba(23,56,255,0.45); stroke-dasharray: 4 5; }
+
+.storyboardSection { background: #111; color: #f7f2e8; }
+.storyHeader p:last-child { color: #aaa; }
+.storyLayout { margin-top: 72px; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 34px; align-items: start; }
+.storyGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+.storyGrid.compact { grid-template-columns: repeat(2, 1fr); }
+.storyCard { min-height: 330px; border: 1px solid rgba(255,255,255,0.14); border-radius: 24px; padding: 22px; background: rgba(255,255,255,0.035); display: flex; flex-direction: column; justify-content: space-between; }
+.storyVisual { height: 88px; position: relative; border-bottom: 1px solid rgba(255,255,255,0.12); margin-bottom: 20px; }
+.storyVisual span { color: var(--blue); font-size: 13px; }
+.storyVisual i { position: absolute; left: 0; bottom: 22px; height: 2px; width: 100%; background: var(--blue); transform-origin: left; }
+.storyCard h3 { font-size: 30px; line-height: 1; letter-spacing: -0.045em; }
+.storyCard p { color: #d8d8d8; line-height: 1.2; letter-spacing: -0.018em; margin-top: 18px; }
+.storyCard small { color: #8d8d8d; line-height: 1.2; letter-spacing: -0.012em; margin-top: 18px; display: block; }
+
+.flipWrap { min-height: 710px; perspective: 1800px; position: relative; isolation: isolate; }
+.pageTabs { position: absolute; right: -34px; top: 70px; display: grid; gap: 8px; z-index: 3; }
+.pageTabs button { writing-mode: vertical-rl; border: 1px solid var(--line); background: #f2eadb; border-radius: 0 12px 12px 0; padding: 18px 8px; cursor: pointer; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+.pageTabs button.active { background: #111; color: #fff; }
+.flipPage { min-height: 690px; color: #201b17; background: #f7efdf; border: 1px solid rgba(0,0,0,.24); border-radius: 28px; padding: 34px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.5), 0 22px 70px rgba(0,0,0,.16); transform-style: preserve-3d; position: relative; overflow: hidden; transform-origin: left center; backface-visibility: hidden; }
+.flipPage::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(0,0,0,.10), transparent 10%, transparent 82%, rgba(255,255,255,.26)); mix-blend-mode: multiply; }
+.bookSpine { position: absolute; left: -18px; top: 22px; bottom: 22px; width: 26px; border-radius: 999px; background: linear-gradient(90deg, rgba(0,0,0,.22), rgba(255,255,255,.14), rgba(0,0,0,.08)); z-index: 2; }
+.pageCurl { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.72), rgba(0,0,0,.14)); transform: skewX(-8deg); z-index: 4; }
+.pageTone0 { background: #f6eedf; color: #221d18; }
+.pageTone1 { background: #efe7d8; color: #1e1b18; }
+.pageTone2 { background: #eae0cd; color: #191714; }
+.pageTone0 .pageGrid h3 { color: #231f1b; }
+.pageTone1 .pageGrid h3 { color: #1f1c18; }
+.pageTone2 .pageGrid h3 { color: #191714; }
+.pageTone0 .pageGrid p, .pageTone0 .pageGrid li { color: #6b6258; }
+.pageTone1 .pageGrid p, .pageTone1 .pageGrid li { color: #61584d; }
+.pageTone2 .pageGrid p, .pageTone2 .pageGrid li { color: #554d43; }
+.pageGrid { display: grid; grid-template-columns: 150px 1fr; gap: 24px; border-bottom: 1px solid rgba(0,0,0,.22); padding: 24px 0; }
+.pageGrid.top { padding-top: 0; }
+.pageGrid span { font-size: 12px; font-weight: 800; letter-spacing: .08em; color: #57524d; }
+.pageGrid h3 { font-family: Instrument Serif, serif; font-size: clamp(34px, 4vw, 58px); line-height: .96; letter-spacing: -.02em; color: #201b17; }
+.pageGrid p, .pageGrid li { font-size: 22px; line-height: 1.22; letter-spacing: -.018em; color: #5e5852; }
+.pageGrid ul { padding: 0; margin: 0; list-style: none; }
+.pageFoot { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding-top: 24px; font-size: 13px; letter-spacing: .03em; color: #555; }
+
+.binder { min-height: 100vh; background: #f7f1e6; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.binderRing { position: absolute; left: 28px; width: 28px; height: 28px; border: 5px solid #1b1b1b; border-radius: 50%; background: var(--paper); }
+.binderRing.left { top: 25%; }
+.binderRing.right { bottom: 25%; }
+.binderRing::after { content: ""; position: absolute; left: 16px; top: 50%; width: 70px; height: 3px; background: #6d655e; transform: translateY(-50%); }
+.binderHeader { max-width: 980px; margin-left: 9vw; padding-top: 10px; }
+.binderHeader p { font-family: Instrument Serif, serif; font-size: clamp(34px, 4.8vw, 66px); line-height: 1; margin-bottom: 8px; }
+.binderHeader h2 { font-family: Instrument Serif, serif; font-size: clamp(48px, 6vw, 88px); line-height: 1.04; letter-spacing: -0.028em; font-weight: 400; max-width: 880px; text-wrap: balance; overflow-wrap: break-word; }
+.binderHeader span { display: inline-block; background: var(--green-soft); border: 2px solid var(--green); padding: 0 10px 6px; line-height: 1; }
+.binderBody { margin-left: 13vw; margin-top: 62px; display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 56px; align-items: start; }
+.pitchCards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.pitchCards div { min-height: 130px; border: 1px solid var(--line); border-radius: 22px; background: #fffdf7; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; font-size: 30px; letter-spacing: -0.04em; }
+.pitchCards span { color: var(--green); font-size: 13px; letter-spacing: 0; }
+
+.comparisonBoard { background: #f6f4ef; }
+.compareHeader, .excuseHeader, .budgetHeader { max-width: 1040px; }
+.compareColumns { margin-top: 72px; display: grid; grid-template-columns: 1.05fr 150px 1.05fr; gap: 28px; align-items: stretch; }
+.compareCol { min-height: 520px; border: 1px solid var(--line); border-radius: 30px; padding: 34px; display: flex; flex-direction: column; justify-content: space-between; }
+.compareCol.traditional { background: #1c1c1c; color: #f8f3ea; }
+.compareCol.bramha { background: linear-gradient(145deg, rgba(23,56,255,0.10), rgba(255,255,255,0.85)); color: var(--ink); border-color: rgba(23,56,255,0.25); }
+.colTag { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.7; }
+.compareCol h3 { font-size: clamp(42px, 5vw, 72px); line-height: 0.95; letter-spacing: -0.05em; max-width: 420px; }
+.compareCol ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+.compareCol li { border-top: 1px solid rgba(127,127,127,0.26); padding-top: 14px; font-size: 20px; letter-spacing: -0.025em; }
+.compareRail { display: grid; gap: 12px; }
+.compareRail div { min-height: 115px; border-radius: 999px; border: 1px solid var(--line); background: #fff; display: grid; place-items: center; text-align: center; padding: 12px; }
+.compareRail span { color: var(--blue); font-size: 12px; }
+.compareRail p { writing-mode: vertical-rl; transform: rotate(180deg); text-transform: uppercase; font-size: 11px; letter-spacing: 0.15em; color: var(--muted); }
+
+.excuseSection { background: #fffaf2; }
+.excuseGrid { margin-top: 74px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.excuseFolder { position: relative; min-height: 390px; cursor: pointer; isolation: isolate; }
+.paperTab { position: absolute; top: 0; left: 20px; right: 30px; height: 72px; border-radius: 24px 24px 0 0; background: #ffd0c2; display: flex; align-items: center; padding-left: 24px; color: rgba(0,0,0,0.55); letter-spacing: -0.02em; z-index: 1; }
+.folderFace { position: absolute; inset: 54px 0 0; border-radius: 30px; background: linear-gradient(180deg, #f0e7dc, #d6b096); box-shadow: 0 24px 60px rgba(0,0,0,0.12); padding: 34px; display: flex; flex-direction: column; justify-content: end; z-index: 3; transition: transform .35s ease; }
+.folderFace span { color: rgba(0,0,0,0.45); font-size: 13px; }
+.folderFace h3 { font-size: clamp(30px, 2.8vw, 48px); line-height: 0.98; letter-spacing: -0.05em; max-width: 260px; }
+.notePage { position: absolute; left: 16px; right: 16px; bottom: 42px; min-height: 260px; border-radius: 24px; background: #fffdf7; border: 1px solid var(--line); z-index: 2; padding: 28px; box-shadow: 0 18px 50px rgba(0,0,0,0.16); }
+.typeLine { font-size: 15px; line-height: 1.32; color: #555; overflow: hidden; }
+.typeLine.answer { margin-top: 16px; color: var(--blue); }
+.excuseFolder.open .folderFace { transform: translateY(120px); }
+
+.productionSection { background: #f7f7f2; }
+.productionCopy { max-width: 1060px; }
+.productionFrame { margin-top: 62px; padding: 28px; overflow: hidden; border: 1px solid var(--line); border-radius: 30px; background: #fff; }
+.productionSvg { width: 100%; max-width: 100%; margin: 0; display: block; overflow: hidden; }
+.locationBox { fill: #fffaf0; stroke: rgba(0,0,0,0.16); }
+.locationBox.ai { fill: #f1f5ff; stroke: rgba(23,56,255,0.25); }
+.svgTitle { font-size: 25px; font-weight: 800; letter-spacing: -0.045em; fill: #1a1a1a; }
+.cameraRig rect, .cameraRig circle, .lightRig circle, .bramhaCore circle { fill: none; stroke: #111; stroke-width: 4; }
+.cameraRig path, .lightRig path, .personCrew path, .messLine { fill: none; stroke: #111; stroke-width: 4; stroke-linecap: round; }
+.personCrew circle { fill: #111; }
+.cameraRig text, .lightRig text, .personCrew text { font-size: 16px; letter-spacing: -0.015em; fill: #555; }
+.budgetText { font-size: 21px; font-weight: 800; letter-spacing: -0.025em; fill: #111; }
+.budgetText.blue { fill: var(--blue); font-size: 21px; }
+.svgPrice { width: 100%; height: 100%; display: flex; align-items: center; white-space: nowrap; overflow: hidden; font-family: Inter, system-ui, sans-serif; font-weight: 900; line-height: 1; letter-spacing: -0.045em; }
+.svgPrice span { display: inline !important; }
+.traditionalPrice { color: #111; font-size: 26px; }
+.bramhaPrice { color: var(--blue); font-size: 24px; }
+.bramhaCore circle { fill: rgba(23,56,255,0.08); stroke: var(--blue); }
+.bramhaCore text { font-size: 19px; font-weight: 800; letter-spacing: -0.035em; fill: var(--blue); }
+.blueFlow { fill: none; stroke: var(--blue); stroke-width: 5; stroke-linecap: round; }
+
+.budgetSection { background: #f4f4f4; overflow: hidden; }
+.liquidBudget { margin-top: 78px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: stretch; }
+.budgetSide { min-height: 620px; border-radius: 34px; padding: 34px; position: relative; overflow: hidden; border: 1px solid var(--line); }
+.traditionalSide { background: #101010; color: #fff; }
+.bramhaSide { background: linear-gradient(145deg, rgba(255,255,255,0.72), rgba(210,226,255,0.46)); color: var(--ink); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
+.budgetSide h3 { font-size: clamp(38px, 4vw, 68px); line-height: 0.96; letter-spacing: -0.055em; max-width: 520px; }
+.budgetSide p { margin-top: 18px; max-width: 520px; color: #878787; line-height: 1.2; letter-spacing: -0.018em; }
+.bramhaSide p { color: #666; }
+.blackBubbles { position: absolute; inset: 210px 28px 28px; max-width: 100%; }
+.blackBubble { position: absolute; width: 168px; height: 168px; border-radius: 50%; background: radial-gradient(circle at 42% 35%, #4e4e4e, #050505 70%); border: 1px solid rgba(255,255,255,0.12); display: grid; place-items: center; text-align: center; padding: 20px; box-shadow: 0 18px 40px rgba(0,0,0,0.4); }
+.blackBubble:nth-child(1) { left: 4%; top: 8%; width: 210px; height: 210px; }
+.blackBubble:nth-child(2) { right: 18%; top: 2%; }
+.blackBubble:nth-child(3) { left: 42%; top: 34%; width: 150px; height: 150px; }
+.blackBubble:nth-child(4) { right: 4%; bottom: 8%; width: 138px; height: 138px; }
+.blackBubble:nth-child(5) { left: 12%; bottom: 2%; width: 172px; height: 172px; }
+.blackBubble strong { font-size: 26px; letter-spacing: -0.045em; }
+.blackBubble strong > span, .liquidCore strong > span { display: inline; }
+.blackBubble span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #aaa; }
+.liquidCore { position: absolute; left: 50%; top: 55%; width: 330px; height: 330px; transform: translate(-50%, -50%); border-radius: 42% 58% 55% 45% / 48% 38% 62% 52%; background: radial-gradient(circle at 35% 25%, rgba(255,255,255,0.98), rgba(173,211,255,0.68) 42%, rgba(23,56,255,0.12) 100%); border: 1px solid rgba(255,255,255,0.85); box-shadow: inset 0 0 45px rgba(255,255,255,0.8), 0 30px 80px rgba(23,56,255,0.18); display: grid; place-items: center; text-align: center; padding: 54px; animation: liquidMove 7s ease-in-out infinite; }
+.liquidCore strong { font-size: clamp(56px, 6vw, 88px); font-weight: 500; letter-spacing: -0.055em; }
+.liquidCore span { display: block; font-size: 14px; letter-spacing: -0.018em; color: var(--blue); text-transform: uppercase; margin-top: 8px; }
+.miniLiquidRow { position: absolute; left: 34px; right: 34px; bottom: 34px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.miniLiquidRow i { min-height: 62px; border-radius: 999px; background: rgba(255,255,255,0.62); border: 1px solid rgba(255,255,255,0.86); display: grid; place-items: center; font-style: normal; color: var(--blue); box-shadow: inset 0 0 20px rgba(255,255,255,0.8); }
+@keyframes liquidMove { 0%,100% { border-radius: 42% 58% 55% 45% / 48% 38% 62% 52%; transform: translate(-50%, -50%) rotate(0deg); } 50% { border-radius: 55% 45% 42% 58% / 38% 55% 45% 62%; transform: translate(-50%, -50%) rotate(3deg); } }
+
+.dossierPanel { min-height: 100vh; padding: 0 clamp(22px, 5vw, 72px); display: grid; grid-template-columns: .9fr 1.35fr; align-items: center; gap: 60px; background: #faf9f5; overflow: hidden; }
+.dossierIntro { position: relative; max-width: 560px; }
+.dossierIntro h2 { font-size: clamp(50px, 6.4vw, 96px); line-height: .94; letter-spacing: -0.06em; margin-top: 20px; }
+.dossierIntro p:not(.micro) { color: var(--muted); font-size: clamp(18px, 1.8vw, 24px); line-height: 1.2; letter-spacing: -.018em; margin-top: 24px; max-width: 480px; }
+.scribbleMark { width: min(420px, 100%); margin-top: 50px; overflow: visible; }
+.scribbleMark path { fill: none; stroke: #111; stroke-width: 3; stroke-linecap: round; }
+.scribbleMark text { font-family: Instrument Serif, serif; font-size: 28px; fill: var(--blue); }
+.dossierFolders { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: center; }
+.dossierFolders .folder { max-width: 100%; height: 250px; }
+.dossierFolders .folderBody { height: 196px; padding-top: 102px; }
+.stickyNotes { position: absolute; right: 7vw; top: 14vh; width: 350px; height: 250px; pointer-events: none; }
+.stickyNotes span { position: absolute; width: 150px; min-height: 96px; background: #ffe95f; box-shadow: 0 12px 30px rgba(0,0,0,.12); padding: 14px; font-size: 14px; line-height: 1.05; letter-spacing: -.025em; transform: rotate(-6deg); }
+.stickyNotes .note1 { left: 128px; top: 18px; transform: rotate(7deg); background: #f8f0d1; }
+.stickyNotes .note2 { left: 76px; top: 128px; transform: rotate(-2deg); background: #b9d889; }
+.folder { position: relative; width: 100%; max-width: 360px; height: 210px; border: 0; background: transparent; cursor: pointer; text-align: left; color: #093044; filter: drop-shadow(0 18px 35px rgba(0,119,255,.2)); }
+.folderTab { position: absolute; top: 10px; left: 0; width: 48%; height: 52px; background: linear-gradient(180deg, #62c7ff, #1da8f8); border-radius: 18px 26px 0 0; }
+.folderBody { position: absolute; left: 0; right: 0; bottom: 0; height: 170px; border-radius: 22px; background: linear-gradient(180deg, #6bd7ff, #0e9bf2); border: 1px solid rgba(0,0,0,.08); padding: 88px 26px 24px; display: grid; }
+.folderBody span { font-size: 34px; letter-spacing: -0.06em; color: #053047; }
+.folderBody small { color: rgba(5,48,71,.7); font-size: 14px; }
+.folderHint { position: absolute; top: -34px; left: 12px; background: #fff; border: 1px solid var(--blue); color: var(--blue); padding: 6px 10px; font-size: 12px; opacity: 0; transform: translateY(8px); transition: .2s ease; z-index: 2; }
+.folder:hover .folderHint { opacity: 1; transform: translateY(0); }
+
+.outputMap { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 80px; background: #111; color: #f7f2e8; }
+.outputLeft p { color: #aaa; }
+.outputCards { display: grid; gap: 12px; }
+.outputCards article { border: 1px solid rgba(255,255,255,.15); border-radius: 22px; padding: 30px; background: rgba(255,255,255,.035); }
+.outputCards span { color: var(--blue); font-size: 14px; }
+.outputCards h3 { font-size: 34px; letter-spacing: -0.04em; line-height: 1.02; margin: 18px 0 8px; }
+.outputCards p { color: #bdbdbd; line-height: 1.22; letter-spacing: -0.018em; }
+.final { min-height: 82vh; display: flex; flex-direction: column; justify-content: center; }
+.final h2 { max-width: 1050px; margin: 24px 0 50px; }
+
+.modalShell { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 300; display: grid; place-items: center; padding: 22px; }
+.deck { width: min(1080px, 100%); background: #f8f6ef; border-radius: 28px; border: 1px solid rgba(255,255,255,.25); box-shadow: 0 40px 120px rgba(0,0,0,.35); overflow: hidden; }
+.deckTop { display: flex; justify-content: space-between; padding: 28px; border-bottom: 1px solid var(--line); }
+.deckTop p { color: var(--blue); font-size: 13px; margin-bottom: 8px; }
+.deckTop h3 { font-size: 28px; letter-spacing: -0.06em; }
+.deckTop button, .deckControls button { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 10px 16px; cursor: pointer; }
+.deckSlide { padding: clamp(30px, 7vw, 80px); min-height: 470px; }
+.deckSlide span { display: inline-block; color: var(--blue); border-bottom: 2px solid var(--blue); margin-bottom: 26px; }
+.deckSlide h2 { font-size: clamp(42px, 6vw, 78px); line-height: 0.98; letter-spacing: -0.055em; max-width: 940px; text-wrap: balance; overflow-wrap: break-word; }
+.deckSlide p { font-size: 24px; line-height: 1.22; letter-spacing: -0.018em; color: var(--muted); margin-top: 32px; max-width: 880px; }
+.deckControls { display: flex; justify-content: space-between; align-items: center; padding: 24px 28px; border-top: 1px solid var(--line); }
+.dots { display: flex; gap: 8px; flex-wrap: wrap; max-width: 50%; justify-content: center; }
+.dots button { width: 12px; height: 12px; border-radius: 50%; border: 0; padding: 0; background: rgba(0,0,0,.18); }
+.dots .active { background: var(--blue); }
+
+@media (max-width: 1050px) {
+  .storyLayout, .liquidBudget, .compareColumns, .posterSection, .binderBody, .dossierPanel, .outputMap { grid-template-columns: 1fr; }
+  .storyGrid, .storyGrid.compact { grid-template-columns: repeat(2, 1fr); }
+  .walkSteps { grid-template-columns: repeat(2, 1fr); }
+  .excuseGrid { grid-template-columns: repeat(2, 1fr); }
+  .compareRail { grid-template-columns: repeat(4, 1fr); }
+  .compareRail p { writing-mode: horizontal-tb; transform: none; }
+  .dossierPanel { padding-top: 120px; padding-bottom: 120px; }
+  .dossierFolders { grid-template-columns: 1fr; }
+  .stickyNotes { position: relative; right: auto; top: auto; margin-top: 30px; }
+}
+
+@media (max-width: 900px) {
+  nav { display: none; }
+  .hamburger { display: flex; }
+  .heroMark { display: none; }
+  .gridIntro { min-height: auto; grid-template-columns: 1fr; grid-template-rows: auto; gap: 42px; display: grid; }
+  .sideLabel, .introBlock, .note.one, .note.two, .folderFloating { grid-column: auto; grid-row: auto; }
+  .posterImage { min-height: 56vh; }
+  .binderHeader, .binderBody { margin-left: 0; }
+  .productionFrame { overflow-x: auto; }
+  .productionSvg { min-width: 900px; }
+  .blackBubbles { position: relative; inset: auto; margin-top: 34px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .blackBubble, .blackBubble:nth-child(n) { position: static; width: 100%; height: 150px; }
+  .liquidCore { position: relative; left: auto; top: auto; transform: none; margin: 60px auto 120px; }
+  .miniLiquidRow { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 620px) {
+  .storyGrid, .storyGrid.compact, .walkSteps, .excuseGrid { grid-template-columns: 1fr; }
+  .storyCard { min-height: 300px; }
+  .deckSlide p { font-size: 19px; }
+  .pageGrid { grid-template-columns: 1fr; gap: 10px; }
+  .pageTabs { right: 10px; top: 10px; display: flex; }
+  .pageTabs button { writing-mode: horizontal-tb; border-radius: 999px; padding: 8px 12px; }
+  .flipPage { min-height: 620px; padding: 26px; }
+  .dossierIntro h2 { font-size: clamp(44px, 13vw, 72px); }
+  .stickyNotes { display: none; }
+}
+
+/* ── Missing modifier classes (semantic, no-op but prevents lint warnings) */
+.foldersPanel {}
+.pitchBinder {}
+.pitchBody {}
+.pageGrid.desc { border-top: none; }
+
+/* ── Hamburger ─────────────────────────────────────── */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  z-index: 200;
+  pointer-events: auto;
+}
+.bar {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--ink);
+  border-radius: 2px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.mobileNav {
+  position: fixed;
+  top: 88px;
+  left: 0;
+  right: 0;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  z-index: 99;
+  padding: 12px 0 20px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+}
+.mobileNav a {
+  padding: 14px clamp(22px, 5vw, 72px);
+  font-size: 22px;
+  letter-spacing: -0.04em;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+.mobileNav a:last-child { border-bottom: none; }
+.mobileNav a:hover { color: var(--blue); }
+
+/* ── Mobile 480px ──────────────────────────────────── */
+@media (max-width: 480px) {
+  .section { padding: 80px clamp(16px, 5vw, 28px); }
+  h1 { font-size: clamp(42px, 12vw, 72px); }
+  .heroLine { font-size: clamp(18px, 5vw, 24px); margin: 28px 0 24px; }
+  .cta { gap: 20px; padding: 16px 22px; font-size: 18px; }
+  .outputMap { gap: 40px; padding: 60px clamp(16px, 5vw, 28px); }
+  .outputCards h3 { font-size: 26px; }
+  .dossierPanel { padding: 80px clamp(16px, 5vw, 28px); gap: 40px; }
+  .dossierIntro h2 { font-size: clamp(38px, 11vw, 60px); }
+  .walkStep p { font-size: clamp(18px, 5vw, 28px); }
+  .walkStep { min-height: 160px; }
+  .excuseFolder { min-height: 320px; }
+  .binderHeader p { font-size: clamp(26px, 7vw, 44px); }
+  .binderHeader h2 { font-size: clamp(36px, 9vw, 60px); }
+  .compareCol h3 { font-size: clamp(32px, 8vw, 52px); }
+  .compareCol li { font-size: 16px; }
+  .budgetSide h3 { font-size: clamp(28px, 7vw, 48px); }
+  .flipPage { padding: 20px; }
+  .pageGrid h3 { font-size: clamp(26px, 7vw, 40px); }
+  .pageGrid p, .pageGrid li { font-size: 17px; }
+  .folderFace h3 { font-size: clamp(22px, 6vw, 36px); }
+  .storyCard h3 { font-size: 22px; }
+  .storyCard { min-height: 240px; }
+  .final h2 { font-size: clamp(32px, 9vw, 60px); }
+  .outputLeft h2 { font-size: clamp(32px, 9vw, 60px); }
+  .liquidCore { width: 260px; height: 260px; padding: 38px; }
+  .liquidCore strong { font-size: clamp(44px, 12vw, 72px); }
+  .blackBubble, .blackBubble:nth-child(n) { height: 120px; }
+  .blackBubble strong { font-size: 20px; }
+  .deckSlide h2 { font-size: clamp(28px, 8vw, 52px); }
+  .deckSlide p { font-size: 16px; }
+  .folder { height: 170px; }
+  .folderBody { height: 136px; padding-top: 72px; }
+  .dossierFolders .folderBody { padding-top: 72px; }
+}
+
+/* ── Mobile 375px ──────────────────────────────────── */
+@media (max-width: 375px) {
+  .section { padding: 70px 16px; }
+  h1 { font-size: clamp(36px, 11vw, 58px); }
+  .heroLine { font-size: 17px; }
+  .cta { gap: 14px; padding: 14px 18px; font-size: 16px; }
+  .brand span { font-size: clamp(22px, 7vw, 36px); }
+}
+
+`;
+
+const existingStyle = document.getElementById("four-frankfurt-style");
+if (!existingStyle) {
+  styles.id = "four-frankfurt-style";
+  document.head.appendChild(styles);
+} else {
+  existingStyle.innerHTML = styles.innerHTML;
+}
+
+
+    const domRoot = ReactDOM.createRoot(document.getElementById('root'));
+    domRoot.render(<App />);
+  </script>
+</body>
+</html>
